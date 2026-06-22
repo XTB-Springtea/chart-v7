@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="description" content="XTB mobile realtime chart with Binance data, indicators and backtest."/>
+  <meta name="theme-color" content="#131722"/>
+  <title>XTB | Mobile Chart</title>
+  <script src="https://unpkg.com/lightweight-charts@4.2.3/dist/lightweight-charts.standalone.production.js"></script>
+  <link rel="stylesheet" href="assets/css/styles.css?v=20260622_rsi_sync"/>
+  <link rel="icon" type="image/svg+xml" href="assets/icons/favicon.svg"/>
+  <link rel="manifest" href="site.webmanifest"/>
+</head>
+<body>
+<div class="app">
+  <header class="topbar">
+    <div class="logo">XTB</div>
+    <div id="tfButtons" class="timeframes topbar-timeframes">
+      <button class="tf" data-tf="1h">1H</button><button class="tf" data-tf="2h">2H</button><button class="tf active" data-tf="4h">4H</button><button class="tf" data-tf="12h">12H</button><button class="tf" data-tf="1d">1D</button><button class="tf" data-tf="2d">2D</button><button class="tf" data-tf="3d">3D</button><button class="tf" data-tf="1w">W</button><button class="tf" data-tf="2w">2W</button><button class="tf" data-tf="1M">M</button>
+    </div>
+
+    <div class="symbol-box"><input id="symbolInput" class="symbol-input" value="BTCUSDT"/><button id="loadSymbol" class="btn">Load</button></div><div id="quickSymbols" class="quick-symbols"><button class="quick-symbol active" data-sym="BTC">BTC</button><button class="quick-symbol" data-sym="ETH">ETH</button><button class="quick-symbol" data-sym="SOL">SOL</button><button class="quick-symbol" data-sym="BNB">BNB</button></div>
+    <div id="symbolTitle" class="symbol-title">BTC/USD</div><div id="mainPrice" class="price">$--</div><div id="mainChange" class="change">--%</div>
+    <div class="status"><span id="wsDot" class="dot"></span><span id="wsStatus">Đang kết nối...</span><span id="clock"></span></div>
+  </header>
+  <nav class="toolbar">
+    <div class="legend"><div id="drawingToolsMount" class="drawing-tools-inline"></div><div class="divider drawing-divider"></div>
+      <label class="toggle ma-combo" data-indicator="emaPrice" title="Bật/tắt EMA trên giá, sửa số để đổi chu kỳ"><i class="ema"></i><span id="emaPriceToggleLabel">EMA</span><input id="emaPriceLength" type="number" value="9" min="1" max="1000" step="1" aria-label="Chu kỳ EMA trên giá"/><em>giá</em></label>
+      <label class="toggle ma-combo" data-indicator="wmaPrice" title="Bật/tắt WMA trên giá, sửa số để đổi chu kỳ"><i class="wma"></i><span id="wmaPriceToggleLabel">WMA</span><input id="wmaPriceLength" type="number" value="45" min="1" max="1000" step="1" aria-label="Chu kỳ WMA trên giá"/><em>giá</em></label>
+      <button class="toggle" data-indicator="bollinger"><i class="bb"></i>BB20</button>
+      <button class="toggle active" data-indicator="volume"><i class="vol"></i>Volume</button>
+      <button class="toggle active" data-indicator="vwap"><i class="vwap"></i>VWAP</button>
+      <select id="vwapAnchor" class="vwap-select"><option value="W">VWAP W</option><option value="M" selected>VWAP M</option><option value="12M">VWAP 12M</option></select>
+      <button class="toggle" data-indicator="baselineFast"><i class="baseline-fast"></i><span id="blFastToggleLabel">BL 50</span></button>
+      <button class="toggle" data-indicator="baselineSlow"><i class="baseline-slow"></i><span id="blSlowToggleLabel">BL 200</span></button><button id="openBlSettings" class="btn">Cài đặt BL</button>
+      <button class="toggle active" data-indicator="rsi"><i class="rsi"></i>RSI14</button>
+      <button class="toggle active" data-indicator="rsiEma"><i class="rsi-ema"></i>RSI EMA9</button>
+      <button class="toggle active" data-indicator="rsiWma"><i class="rsi-wma"></i>RSI WMA45</button>
+      <button id="toggleBacktest" class="btn primary">Backtest</button><button id="captureChart" class="btn" title="Copy ảnh toàn bộ chart">📷</button><button id="resetView" class="btn">Reset chart</button><button id="toggleFullscreen" class="btn icon-btn" title="Full màn hình">⛶</button>
+    </div>
+  </nav>
+  <section class="value-strip">
+    <span><span id="emaPriceValueLabel">EMA9</span>: <b id="vEmaPrice" class="ema-text">--</b></span><span><span id="wmaPriceValueLabel">WMA45</span>: <b id="vWmaPrice" class="wma-text">--</b></span><span>BB20: <b id="vBbUpper" class="bb-upper-text">--</b> / <b id="vBbMiddle" class="bb-middle-text">--</b> / <b id="vBbLower" class="bb-lower-text">--</b></span><span>Volume: <b id="vVolume" class="vol-text">--</b></span><span>Vol MA20: <b id="vVolumeMa20" class="vol-ma-text">--</b></span><span>VWAP <b id="vVwapAnchor" class="vwap-text">M</b>: <b id="vVwap" class="vwap-text">--</b></span><span class="bl-value-item"><b id="blFastValueLabel" class="baseline-fast-text">BL 50</b>: <b id="vBaselineFast" class="baseline-fast-text">--</b></span><span class="bl-value-item"><b id="blSlowValueLabel" class="baseline-slow-text">BL 200</b>: <b id="vBaselineSlow" class="baseline-slow-text">--</b></span><span>RSI14: <b id="vRsi" class="rsi-text">--</b></span><span>RSI EMA9: <b id="vRsiEma" class="rsi-ema-text">--</b></span><span>RSI WMA45: <b id="vRsiWma" class="rsi-wma-text">--</b></span><span>OHLC: <b id="vOhlc" class="ohlc-text">--</b></span><span>BL trạng thái: <b id="vBlStatus" class="status-text">--</b></span>
+  </section>
+  <main class="chart-layout">
+    <section class="chart-panel"><div id="priceChart"></div></section>
+    <div id="rsiResizeHandle" class="rsi-resize-handle" title="Kéo để đổi chiều cao RSI"></div>
+    <section class="chart-panel"><div id="rsiChart"></div></section>
+  </main>
+
+  <aside id="blSettingsPanel" class="bl-settings-panel">
+    <div class="bt-head"><b>Cài đặt Baseline JMA</b><button id="closeBlSettings" class="btn">Đóng</button></div>
+    <div class="bl-settings-grid">
+      <div class="bl-settings-title baseline-fast-text">BL ngắn</div>
+      <label>Length<input id="blFastLength" type="number" value="50" min="1" step="1"/></label>
+      <label>Phase<input id="blFastPhase" type="number" value="5" min="-100" max="100" step="0.1"/></label>
+      <label>Power<input id="blFastPower" type="number" value="2" min="1" step="1"/></label>
+      <div class="bl-settings-title baseline-slow-text">BL dài</div>
+      <label>Length<input id="blSlowLength" type="number" value="200" min="1" step="1"/></label>
+      <label>Phase<input id="blSlowPhase" type="number" value="0" min="-100" max="100" step="0.1"/></label>
+      <label>Power<input id="blSlowPower" type="number" value="2" min="1" step="1"/></label>
+      <div class="bl-settings-actions">
+        <button id="applyBlSettings" class="btn primary">Áp dụng</button>
+        <button id="resetBlSettings" class="btn">Mặc định 50/200</button>
+      </div>
+      <p class="bl-settings-note">Thông số được lưu trên trình duyệt. Công thức JMA giữ theo file Baseline gốc: Length, Phase, Power, Source = Close.</p>
+    </div>
+  </aside>
+  <aside id="backtestPanel" class="backtest-panel">
+    <div class="bt-head"><b>Backtest</b><button id="closeBacktest" class="btn">Đóng</button></div>
+    <div class="bt-grid">
+      <label>Chiến lược<select id="btStrategy"><option value="rsiCross">RSI EMA9 cắt RSI WMA45</option><option id="btPriceEmaOption" value="priceEma">Giá cắt EMA9</option><option id="btPriceWmaOption" value="priceWma">Giá cắt WMA45</option></select></label>
+      <label>Chiều lệnh<select id="btDirection"><option value="both">Long + Short</option><option value="long">Chỉ Long</option><option value="short">Chỉ Short</option></select></label>
+      <label>Vốn ban đầu $<input id="btCapital" type="number" value="1000" min="1"/></label>
+      <label>Rủi ro/lệnh %<input id="btRisk" type="number" value="2" step="0.1" min="0.1"/></label>
+      <label>Stop Loss %<input id="btSL" type="number" value="1" step="0.1" min="0.1"/></label>
+      <label>Take Profit %<input id="btTP" type="number" value="2" step="0.1" min="0.1"/></label>
+      <label>Phí mỗi chiều %<input id="btFee" type="number" value="0.04" step="0.01" min="0"/></label>
+      <label>Backtest từ ngày<input id="btFrom" type="date"/></label>
+      <label>Đến ngày<input id="btTo" type="date"/></label>
+      <div class="bt-range-actions full"><button class="btn bt-range-preset" data-range="3M">3M</button><button class="btn bt-range-preset" data-range="6M">6M</button><button class="btn bt-range-preset" data-range="1Y">1Y</button><button class="btn bt-range-preset" data-range="2Y">2Y</button><button class="btn bt-range-preset" data-range="ALL">ALL</button></div>
+      <button id="runBacktest" class="btn primary full">Chạy backtest + vẽ lên chart</button>
+      <div class="bt-chart-actions full"><button id="btShowAll" class="btn">Hiện tất cả lệnh</button><button id="btReplay" class="btn">Replay trên chart</button><button id="btClearChart" class="btn">Xóa trên chart</button></div>
+      <div id="btReplayStatus" class="bt-status full">Chưa chạy backtest</div>
+    </div>
+    <div id="btSummary" class="bt-summary"></div>
+    <div class="bt-table-wrap"><table><thead><tr><th>#</th><th>Thời gian</th><th>Lệnh</th><th>Entry</th><th>Exit</th><th>KQ</th><th>PnL</th><th>Equity</th></tr></thead><tbody id="btTrades"></tbody></table></div>
+  </aside>
+</div>
+<script src="assets/js/app.js?v=20260622_rsi_sync"></script>
+</body>
+</html>
